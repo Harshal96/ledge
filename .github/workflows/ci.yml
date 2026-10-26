@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  package-tests:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Selected Xcode
+        run: xcodebuild -version
+      - name: Package tests
+        run: swift test --package-path Packages/LedgeKit
+
+  app-tests-and-build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Selected Xcode
+        run: xcodebuild -version
+      - name: Verify test target registration
+        run: ./Scripts/verify-test-targets.sh --project
+      - name: Verify evidence gates against fixtures
+        run: /usr/bin/python3 Scripts/tests/test-gates.py
+      - name: App tests with coverage
+        run: xcodebuild test -project Ledge.xcodeproj -scheme Ledge -destination 'platform=macOS' -derivedDataPath .build/DerivedData -enableCodeCoverage YES -resultBundlePath .build/LedgeTests.xcresult ONLY_ACTIVE_ARCH=YES
+      - name: Require executed tests
+        run: ./Scripts/verify-test-targets.sh --result .build/LedgeTests.xcresult
+      - name: Coverage gate
+        run: ./Scripts/check-coverage.sh .build/LedgeTests.xcresult
+      - name: Release build
+        run: xcodebuild build -project Ledge.xcodeproj -scheme Ledge -configuration Release -derivedDataPath .build/DerivedData
+      - name: Analyze
+        run: xcodebuild analyze -project Ledge.xcodeproj -scheme Ledge -configuration Debug -derivedDataPath .build/DerivedData
+      - name: Public API boundary scan
+        run: ./Scripts/verify-public-apis.sh .build/DerivedData/Build/Products/Release/Ledge.app
+      - name: Third-party license and provenance scan
+        run: ./Scripts/check-third-party-licenses.sh

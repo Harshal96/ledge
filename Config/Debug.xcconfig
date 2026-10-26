@@ -1,0 +1,4 @@
+#include "Base.xcconfig"
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG LEDGE_UITESTING
+// CI treats warnings as errors in every configuration, including the test action.
+SWIFT_TREAT_WARNINGS_AS_ERRORS = YES

@@ -1,0 +1,29 @@
+{
+  "config": {
+    "repositories": ["owner/repo"],
+    "labelsAny": ["good first issue"],
+    "trustedTriageLabels": ["good first issue"],
+    "keywords": ["parser"],
+    "minimumScore": 70
+  },
+  "state": {"repositories": {"owner/repo": {"baselineComplete": true}}},
+  "records": [],
+  "responses": {
+    "github.issues.listUpdated:owner/repo": {
+      "data": [{"node_id": "I_fixture", "number": 42}], "hasNext": false
+    },
+    "github.pullRequests.findOverlap:owner/repo": {"data": [], "hasNext": false},
+    "github.issues.getEvidence:owner/repo": {
+      "issue": {
+        "node_id": "I_fixture", "number": 42, "title": "Fix parser validation",
+        "body": "Steps to reproduce and a focused regression test are available.",
+        "state": "open", "locked": false, "assignees": [],
+        "labels": [{"name": "good first issue"}],
+        "html_url": "https://github.com/owner/repo/issues/42"
+      },
+      "comments": [], "timeline": [], "complete": true,
+      "assignedActors": {"totalCount": 0},
+      "closingPullRequests": {"nodes": [], "pageInfo": {"hasNextPage": false}}
+    }
+  }
+}

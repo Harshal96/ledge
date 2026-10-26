@@ -1,0 +1,7 @@
+{
+  "excludedBundleIDs" : [
+    "com.1password.1password",
+    "com.agilebits.onepassword7",
+    "com.apple.keychainaccess"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Ledge successful run result v1",
+  "type": "object", "additionalProperties": false,
+  "properties": {
+    "events": {"type": "array", "maxItems": 100, "items": {"$ref": "card-v1.schema.json"}},
+    "state": {},
+    "recordMutations": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["collection", "key"], "properties": {"collection": {"type": "string"}, "key": {"type": "string", "minLength": 1, "maxLength": 256}, "value": {}}}},
+    "summary": {"type": ["string", "null"], "maxLength": 4096}
+  }
+}

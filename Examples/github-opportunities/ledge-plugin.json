@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "dev.ledge.github-opportunities",
+  "version": "0.1.0",
+  "hostProtocol": "1",
+  "name": "GitHub Opportunities",
+  "runtime": {"kind": "local.command", "entry": "watch.py", "interpreter": "python3"},
+  "capabilities": ["github.issues.read", "github.pullRequests.read", "state.readwrite", "events.publish"],
+  "configSchema": "config.schema.json",
+  "commands": ["scan", "revalidate-issue"],
+  "defaultCommand": "scan"
+}

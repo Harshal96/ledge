@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "automations": [{
+    "id": "oss-opportunities",
+    "plugin": "dev.ledge.github-opportunities@0.1.0",
+    "command": "scan",
+    "connection": "github-personal",
+    "enabled": false,
+    "schedule": {"cron": "*/15 * * * *", "timezone": "Asia/Kolkata", "misfire": "run-latest", "jitterSeconds": 60},
+    "config": {"repositories": ["owner/repo"], "labelsAny": ["good first issue", "help wanted"], "trustedTriageLabels": ["good first issue"], "keywords": ["parser", "validation"], "minimumScore": 70, "firstRun": "baseline"},
+    "delivery": {"surface": "notch", "mode": "digest", "quietHours": ["22:00", "08:00"]}
+  }]
+}

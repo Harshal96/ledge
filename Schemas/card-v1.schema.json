@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Ledge native detail card v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["sourceKey", "title"],
+  "properties": {
+    "sourceKey": {"type": "string", "minLength": 1, "maxLength": 256}, "revision": {"type": "integer", "minimum": 1},
+    "title": {"type": "string", "minLength": 1, "maxLength": 512}, "body": {"type": "string", "maxLength": 8192},
+    "sensitivity": {"enum": ["public", "sensitive"]}, "priority": {"type": "integer"},
+    "evidence": {"type": "array", "items": {"type": "string"}},
+    "actions": {"type": "array", "maxItems": 3, "items": {"type": "object", "additionalProperties": false, "required": ["id", "label"], "properties": {"id": {"type": "string"}, "label": {"type": "string"}, "url": {"type": ["string", "null"]}, "command": {"type": ["string", "null"]}, "arguments": {}}}}
+  }
+}

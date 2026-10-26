@@ -1,0 +1,68 @@
+// swift-tools-version: 6.0
+import PackageDescription
+
+let package = Package(
+    name: "LedgeKit",
+    platforms: [.macOS(.v15)],
+    products: [
+        .library(name: "LedgeDomain", targets: ["LedgeDomain"]),
+        .library(name: "LedgeStorage", targets: ["LedgeStorage"]),
+        .library(name: "ShellFeature", targets: ["ShellFeature"]),
+        .library(name: "CaptureFeature", targets: ["CaptureFeature"]),
+        .library(name: "ClipboardFeature", targets: ["ClipboardFeature"]),
+        .library(name: "MeetingFeature", targets: ["MeetingFeature"]),
+        .library(name: "HandoffFeature", targets: ["HandoffFeature"]),
+        .library(name: "AudioFeature", targets: ["AudioFeature"]),
+        .library(name: "AutomationDomain", targets: ["AutomationDomain"]),
+        .library(name: "AutomationStorage", targets: ["AutomationStorage"]),
+        .library(name: "AutomationRuntime", targets: ["AutomationRuntime"]),
+        .library(name: "PluginRuntime", targets: ["PluginRuntime"]),
+        .library(name: "IntegrationKit", targets: ["IntegrationKit"]),
+        .library(name: "GitHubIntegration", targets: ["GitHubIntegration"]),
+        .library(name: "NotificationRouting", targets: ["NotificationRouting"]),
+        .library(name: "AgentIPC", targets: ["AgentIPC"]),
+        .library(name: "AutomationHost", targets: ["AutomationHost"]),
+        .executable(name: "ledge", targets: ["LedgeCLI"]),
+        .executable(name: "LedgeAgent", targets: ["LedgeAgent"])
+    ],
+    targets: [
+        .target(name: "LedgeDomain"),
+        .target(name: "AutomationDomain"),
+        .testTarget(name: "AutomationDomainTests", dependencies: ["AutomationDomain"]),
+        .target(name: "AutomationStorage", dependencies: ["AutomationDomain"], linkerSettings: [.linkedLibrary("sqlite3")]),
+        .testTarget(name: "AutomationStorageTests", dependencies: ["AutomationStorage", "AutomationDomain"]),
+        .target(name: "AutomationRuntime", dependencies: ["AutomationDomain"]),
+        .testTarget(name: "AutomationRuntimeTests", dependencies: ["AutomationRuntime", "AutomationDomain"]),
+        .target(name: "PluginRuntime", dependencies: ["AutomationDomain"]),
+        .testTarget(name: "PluginRuntimeTests", dependencies: ["PluginRuntime", "AutomationDomain"]),
+        .target(name: "IntegrationKit", dependencies: ["AutomationDomain"]),
+        .target(name: "GitHubIntegration", dependencies: ["AutomationDomain", "IntegrationKit"]),
+        .testTarget(name: "GitHubIntegrationTests", dependencies: ["GitHubIntegration", "IntegrationKit", "AutomationDomain"]),
+        .target(name: "NotificationRouting", dependencies: ["AutomationDomain"]),
+        .testTarget(name: "NotificationRoutingTests", dependencies: ["NotificationRouting", "AutomationDomain"]),
+        .target(name: "AgentIPC", dependencies: ["AutomationDomain"]),
+        .target(name: "AutomationHost", dependencies: ["AutomationDomain", "AutomationStorage", "AutomationRuntime", "PluginRuntime", "IntegrationKit", "GitHubIntegration"]),
+        .testTarget(name: "AutomationHostTests", dependencies: ["AutomationHost", "AutomationDomain", "AutomationStorage", "PluginRuntime", "IntegrationKit"]),
+        .executableTarget(name: "LedgeCLI", dependencies: ["AutomationHost", "AgentIPC"]),
+        .executableTarget(name: "LedgeAgent", dependencies: ["AutomationHost", "AgentIPC"]),
+        .target(
+            name: "LedgeStorage",
+            dependencies: ["LedgeDomain"],
+            linkerSettings: [.linkedLibrary("sqlite3")]
+        ),
+        .target(name: "ShellFeature", dependencies: ["LedgeDomain"]),
+        .target(name: "CaptureFeature", dependencies: ["LedgeDomain", "ShellFeature"], linkerSettings: [.linkedFramework("AppKit"), .linkedFramework("ScreenCaptureKit"), .linkedFramework("ImageIO")]),
+        .target(name: "ClipboardFeature", dependencies: ["LedgeDomain"]),
+        .target(name: "MeetingFeature", dependencies: ["LedgeDomain"], linkerSettings: [.linkedFramework("EventKit")]),
+        .target(name: "HandoffFeature", dependencies: ["LedgeDomain", "LedgeStorage"], linkerSettings: [.linkedFramework("AppKit"), .linkedFramework("SwiftUI")]),
+        .target(name: "AudioFeature", dependencies: ["LedgeDomain"], linkerSettings: [.linkedFramework("CoreAudio"), .linkedFramework("SwiftUI")]),
+        .testTarget(name: "LedgeDomainTests", dependencies: ["LedgeDomain"]),
+        .testTarget(name: "LedgeStorageTests", dependencies: ["LedgeStorage", "LedgeDomain"]),
+        .testTarget(name: "ShellFeatureTests", dependencies: ["ShellFeature", "LedgeDomain"]),
+        .testTarget(name: "CaptureFeatureTests", dependencies: ["CaptureFeature", "LedgeDomain", "ShellFeature"]),
+        .testTarget(name: "ClipboardFeatureTests", dependencies: ["ClipboardFeature", "LedgeDomain"]),
+        .testTarget(name: "MeetingFeatureTests", dependencies: ["MeetingFeature", "LedgeDomain"]),
+        .testTarget(name: "HandoffFeatureTests", dependencies: ["HandoffFeature", "LedgeDomain"]),
+        .testTarget(name: "AudioFeatureTests", dependencies: ["AudioFeature", "LedgeDomain"])
+    ]
+)
