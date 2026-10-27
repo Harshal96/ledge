@@ -15,6 +15,7 @@ destination="${TARGET_BUILD_DIR:?}/${CONTENTS_FOLDER_PATH:?}"
 /usr/bin/ditto "$binary_path/ledge" "$destination/MacOS/ledge-cli"
 /usr/bin/ditto "$repository_root/LedgeAgent/Resources/com.ledge.agent.plist" "$destination/Library/LaunchAgents/com.ledge.agent.plist"
 /bin/mkdir -p "$destination/Resources/PluginSDK/python/ledge_sdk" "$destination/Resources/Apps"
+/usr/bin/ditto "$repository_root/LedgeApp/Resources/AppIcon.icns" "$destination/Resources/AppIcon.icns"
 /usr/bin/rsync -a --delete --delete-excluded --exclude '__pycache__' --exclude '*.pyc' "$repository_root/SDKs/python/ledge_sdk/" "$destination/Resources/PluginSDK/python/ledge_sdk/"
 /usr/bin/rsync -a --delete --delete-excluded --exclude '__pycache__' --exclude '*.pyc' --exclude tests "$repository_root/FirstPartyApps/" "$destination/Resources/Apps/"
 # Build provenance is generated in the product, never in the source checkout.
