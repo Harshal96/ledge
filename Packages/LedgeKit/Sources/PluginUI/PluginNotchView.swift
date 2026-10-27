@@ -64,7 +64,7 @@ public struct PluginNotchView: View {
                     HStack { Text(instance.name).font(.caption).foregroundStyle(.secondary); Spacer(); Button(store.running.contains(instance.id) ? "Running…" : "Run") { Task { await store.run(instance) } }.buttonStyle(.bordered).disabled(store.running.contains(instance.id)) }
                 }
             }
-            HStack { Text("Local-first · optional apps"); Spacer(); Text("⌘⌥Space") }.font(.caption2).foregroundStyle(.secondary)
+            HStack { Text("Local-first · optional apps"); Spacer(); Text("Hover to open") }.font(.caption2).foregroundStyle(.secondary)
         }.padding(22).frame(maxWidth: .infinity, maxHeight: .infinity).foregroundStyle(.white)
             .background(.black, in: UnevenRoundedRectangle(bottomLeadingRadius: 26, bottomTrailingRadius: 26)).environment(\.colorScheme, .dark)
             .accessibilityIdentifier("notch.root")

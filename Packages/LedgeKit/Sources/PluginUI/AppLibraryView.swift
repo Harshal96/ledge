@@ -13,7 +13,6 @@ public struct AppLibraryView: View {
     @State private var connectionName = "personal"
     @State private var token = ""
     @AppStorage("ledge.automation.keepRunning") private var keepRunning = false
-    @AppStorage("ledge.shell.keyCode") private var keyCode = 49
     @AppStorage("ledge.shell.displayID") private var displayID = ""
     @AppStorage("ledge.presentationSafe") private var presentationSafe = false
     public init() {}
@@ -125,7 +124,6 @@ public struct AppLibraryView: View {
             Text("ledge init ./my-app\nledge dev ./my-app --fixture ./input.json\nledge app install ./my-app --trust-local-code").font(.system(.callout, design: .monospaced)).textSelection(.enabled).padding(16).frame(maxWidth: .infinity, alignment: .leading).background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 12))
             Button("Enable signed background runner") { Task { await store.enableBackgroundService() } }
             Toggle("Keep scheduled apps running when I quit the interface", isOn: $keepRunning)
-            Picker("Open notch with Command–Option", selection: $keyCode) { Text("Space").tag(49); Text("K").tag(40); Text("L").tag(37) }
             Picker("Notch display", selection: $displayID) {
                 Text("Automatic — prefer camera housing").tag("")
                 Text("Follow pointer on explicit open").tag("pointer")

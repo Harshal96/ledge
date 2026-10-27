@@ -4,6 +4,8 @@ Status: approved for implementation by the user's subsequent implement/continue 
 
 ## 1. Product decision
 
+User override (2026-10-27): register no global hotkeys, including optional ones. The user reported Command–Option–Space also opening macOS search. Hover is the primary entry; Finder/Spotlight reopen provides recovery. References to a global hotkey later in this historical design are superseded by this instruction.
+
 **Ledge is a native notch interaction framework. Apps are plugins users choose to install; Ledge itself is not a collection of features.**
 
 The user requested Notchy-like presentation, not Notchy's feature set. Borrow only the interaction grammar: compact presence, hover peek, deliberate expansion, fluid collapse, and a virtual island on notchless/external displays. Do not copy its branding, assets, implementation, feature inventory, pricing, or performance claims. Reference: [Notchy's official demonstration](https://notchy.dev/).

@@ -51,7 +51,7 @@ ledge resume
 
 `app list` returns canonical instances suitable for editing/export. `configure` accepts a complete instance document; preserve its identity/revision rather than inventing an old ID. New instances start disabled even if input requests enablement. Retained archives cannot execute and do not restore themselves on reinstall; a restoration workflow is unfinished.
 
-Command–Option–Space opens the notch. Finder/Spotlight reopen reaches Library independently. Closing a window leaves the process resident; standard Quit requests Stop unless Keep running is explicitly chosen. A failed stop asks for retry/keep-open/explicit quit-anyway instead of claiming work stopped.
+Hover over the camera housing/top-center edge to open the notch. No global hotkey is registered. Finder/Spotlight reopen reaches Library independently. Closing a window leaves the process resident; standard Quit requests Stop unless Keep running is explicitly chosen. A failed stop asks for retry/keep-open/explicit quit-anyway instead of claiming work stopped.
 
 ## GitHub
 

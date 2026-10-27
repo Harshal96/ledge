@@ -17,6 +17,9 @@ public struct NotchGeometryResolver: Sendable {
         let width = min(expanded ? 560 : max(200, right - left), screen.visibleFrame.width)
         let h = min(expanded ? height : 56, screen.visibleFrame.height)
         let x = min(max(center - width / 2, screen.visibleFrame.minX), screen.visibleFrame.maxX - width)
-        return NotchPlacement(frame: CGRect(x: x, y: top - h, width: width, height: h), trigger: CGRect(x: left, y: top - 6, width: max(0, right - left), height: 6), hasNotch: hasNotch)
+        // Track the actual housing/top edge, not only the strip below it.
+        // Content still stays entirely below the camera/menu safe area.
+        let triggerBottom = hasNotch ? top - 6 : screen.frame.maxY - 6
+        return NotchPlacement(frame: CGRect(x: x, y: top - h, width: width, height: h), trigger: CGRect(x: left, y: triggerBottom, width: max(0, right - left), height: screen.frame.maxY - triggerBottom), hasNotch: hasNotch)
     }
 }

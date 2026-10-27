@@ -1,15 +1,12 @@
 import AppKit
 import SwiftUI
-import Carbon.HIToolbox
 import ShellFeature
 import PluginUI
 
 /// Infrastructure only: optional apps are owned by the registry, not this app.
 @MainActor final class AppDelegate: NSObject, NSApplicationDelegate {
     private let notch = NotchWindowCoordinator()
-    private let hotkeys = CarbonHotKeyRegistrar()
     private var libraryWindow: NSWindow?
-    private var registeredChord: HotKeyChord?
     private var displayPreference: String?
     private var presentationSafe = false
     private var defaultsObserver: NSObjectProtocol?
@@ -19,8 +16,8 @@ import PluginUI
         notch.onExplicitOpen = { Task { await store.refresh() } }
         store.onInteraction = { [weak self] active in self?.notch.setInteraction(active) }
         store.onPeek = { [weak self] summary in self?.notch.notify(summary) ?? false }
-        registerShortcut()
-        defaultsObserver = NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in Task { @MainActor in self?.registerShortcut() } }
+        refreshShellPreferences()
+        defaultsObserver = NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in Task { @MainActor in self?.refreshShellPreferences() } }
         openLibrary()
     }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { openLibrary(); return true }
@@ -38,17 +35,13 @@ import PluginUI
             sender.reply(toApplicationShouldTerminate: true)
         }; return .terminateLater
     }
-    func applicationWillTerminate(_ notification: Notification) { hotkeys.unregisterAll(); if let defaultsObserver { NotificationCenter.default.removeObserver(defaultsObserver) } }
-    private func registerShortcut() {
+    func applicationWillTerminate(_ notification: Notification) { if let defaultsObserver { NotificationCenter.default.removeObserver(defaultsObserver) } }
+    private func refreshShellPreferences() {
         let selectedDisplay = UserDefaults.standard.string(forKey: "ledge.shell.displayID")
         let safe = UserDefaults.standard.bool(forKey: "ledge.presentationSafe")
         if selectedDisplay != displayPreference || safe != presentationSafe {
             displayPreference = selectedDisplay; presentationSafe = safe; notch.preferencesChanged()
         }
-        let key = UserDefaults.standard.object(forKey: "ledge.shell.keyCode") as? Int ?? 49
-        let chord = HotKeyChord(keyCode: UInt32(clamping: key), modifiers: UInt32(cmdKey | optionKey))
-        guard chord != registeredChord else { return }; registeredChord = chord
-        if hotkeys.register([chord], handler: { [weak self] _ in self?.notch.open() }) != .registered { openLibrary() }
     }
     private func openLibrary() {
         notch.dismiss()

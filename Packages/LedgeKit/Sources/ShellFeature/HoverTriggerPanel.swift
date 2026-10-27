@@ -10,10 +10,13 @@ public final class HoverTriggerPanel: NSPanel {
         self.onEnter = onEnter
         self.onExit = onExit
         super.init(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: true)
-        level = .floating
+        // The hit target occupies the housing/top-edge band, above the menu
+        // bar. Keep it confined to that band so ordinary menus stay usable.
+        level = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 1)
         collectionBehavior = [.moveToActiveSpace, .transient, .ignoresCycle]
         isOpaque = false
         backgroundColor = .clear
+        hidesOnDeactivate = false
         ignoresMouseEvents = false
         let view = NSView(frame: CGRect(origin: .zero, size: frame.size))
         contentView = view

@@ -4,7 +4,7 @@ A native macOS notch framework for apps you choose. No menu-bar icon, fixed feat
 
 ## Current implementation preview
 
-- A public-AppKit notch/virtual-island shell with hover dwell, explicit keyboard opening, reduced-motion support, display selection, and presentation-safe suppression.
+- A public-AppKit notch/virtual-island shell with hover dwell, keyboard navigation, reduced-motion support, display selection, and presentation-safe suppression. No global hotkeys.
 - An offline optional catalog: GitHub Opportunities, GitHub CI Watch, and Command Result. Browsing installs nothing; installation runs nothing; new instances start disabled.
 - Trusted local Python/Node programs, validated v2 manifests, multiple configured instances, cron/interval schedules, encrypted transactional state/events, and persistent host-rendered views.
 - Native configuration forms and bounded declarative UI. Plugins do not inject SwiftUI, HTML, windows, or libraries into Ledge.
@@ -15,7 +15,7 @@ This is **not a qualified signed release or the complete platform design**. Long
 
 ## Use and recovery
 
-Open the app in Finder/Spotlight to reach Apps Library. The default global shortcut is Command–Option–Space; Developer settings can change it to K or L, choose a display, reset placement, or enable presentation-safe mode. There is deliberately no status-item recovery dropdown.
+Hover over the camera housing/top-center edge to open the notch. Ledge registers no global keyboard shortcuts. Open the app in Finder/Spotlight to reach Apps Library for recovery. Developer settings choose a display, reset placement, or enable presentation-safe mode. There is deliberately no status-item recovery dropdown.
 
 The production agent requires matching Apple signing identities for the GUI, agent and CLI. An unsigned build can browse the offline catalog but does not establish working background automations. Registration, connections and enablement are separate explicit steps. Nothing is installed into `/Applications` by a source build.
 

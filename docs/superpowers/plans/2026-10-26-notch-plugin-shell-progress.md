@@ -1,6 +1,14 @@
 # Notch plugin shell: implementation status
 
-Updated 2026-10-27. Source preview on `feat/developer-automation-platform`, based on `40593c2`; uncommitted work, not an installed release. The approved [design](../specs/2026-10-26-notch-plugin-shell-design.md) remains broader than this implementation.
+## Hover-only follow-up (2026-10-27, after 9d8cf1e)
+
+The user reported that the hotkey opened Ledge but hover did not, and explicitly requested no hotkeys because the chord also opens macOS search. Production AppDelegate no longer constructs/registers Carbon hotkeys, reads the old shortcut preference, or exposes shortcut controls/hints. Finder/Spotlight reopen remains recovery. The shared legacy hotkey utility is inactive, not registered by the new entry point.
+
+Geometry regressions reproduced the hit-area miss: the old trigger only covered six pixels below the housing/menu safe area, missing the camera housing and actual screen top. The trigger now covers the housing plus six pixels below on notched displays, or a top-center six-pixel strip on notchless displays. Its public window level is above the status bar while constrained to that band; content remains below the camera. Tests failed before the geometry fix and passed afterward. Full suite: 22 XCTest + 102 Swift Testing passed; Release build passed. No direct visual/physical hover claim: computer-use access to Ledge was not approved. The installed running app remains unchanged pending user quit/replacement; these changes are not yet committed or pushed.
+
+Installation follow-up: after the user confirmed quitting, the hover-only build was installed at `/Applications/Ledge.app`. The prior bundle is preserved at `/Applications/.Ledge-backup-before-hover-only.app`. Installed and built GUI SHA-256 hashes matched, and strict recursive signature verification passed. The app was not opened through an alternative UI mechanism after computer-use denial; physical hover behavior remains unconfirmed. This follow-up is now included in the user's requested commit/push.
+
+The sections below record the earlier implementation preview based on `40593c2` (committed as `9d8cf1e`), before the hover-only follow-up. The approved [design](../specs/2026-10-26-notch-plugin-shell-design.md) remains broader than this implementation.
 
 ## Delivered in source
 
