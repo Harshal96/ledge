@@ -52,7 +52,7 @@ private struct JSONStructure {
 }
 
 public enum ManifestValidator {
-    public static let capabilities: Set<String> = ["events.publish", "state.readwrite", "github.issues.read", "github.pullRequests.read"]
+    public static let capabilities: Set<String> = ["events.publish", "state.readwrite", "github.issues.read", "github.pullRequests.read", "github.actions.read"]
     public static func validate(data: Data) throws -> PluginManifest {
         let value = try StrictJSON.decode(data)
         try Validation.keys(value, allowed: ["$schema", "schemaVersion", "id", "version", "hostProtocol", "name", "runtime", "capabilities", "configSchema", "commands", "defaultCommand"])

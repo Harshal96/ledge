@@ -4,8 +4,8 @@ import SQLite3
 import AutomationDomain
 
 public actor SQLiteAutomationStore {
-    private let db: AutomationDatabase
-    private let key: SymmetricKey
+    let db: AutomationDatabase
+    let key: SymmetricKey
 
     public init(root: URL, key: Data) throws {
         guard key.count == 32 else { throw PlatformError.invalid("Expected a 256-bit automation key") }
@@ -13,10 +13,13 @@ public actor SQLiteAutomationStore {
         self.key = SymmetricKey(data: key)
         db = try AutomationDatabase(root.appendingPathComponent("automation.sqlite"))
         try db.execute("PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000; CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY,payload BLOB NOT NULL); CREATE TABLE IF NOT EXISTS runs(id TEXT PRIMARY KEY,job TEXT NOT NULL,occurrence TEXT NOT NULL,status TEXT NOT NULL,payload BLOB NOT NULL, UNIQUE(job,occurrence)); CREATE TABLE IF NOT EXISTS state(job TEXT PRIMARY KEY,payload BLOB NOT NULL); CREATE TABLE IF NOT EXISTS records(job TEXT,collection TEXT,k TEXT,payload BLOB NOT NULL,PRIMARY KEY(job,collection,k)); CREATE TABLE IF NOT EXISTS events(id TEXT PRIMARY KEY,job TEXT NOT NULL,source TEXT NOT NULL,revision INTEGER NOT NULL,created REAL NOT NULL,unread INTEGER NOT NULL DEFAULT 1,delivered INTEGER NOT NULL DEFAULT 0,payload BLOB NOT NULL,UNIQUE(job,source)); CREATE TABLE IF NOT EXISTS meta(k TEXT PRIMARY KEY,v TEXT NOT NULL); PRAGMA user_version=1;")
+        try db.execute("CREATE TABLE IF NOT EXISTS app_installations(id TEXT PRIMARY KEY,payload BLOB NOT NULL); CREATE TABLE IF NOT EXISTS app_instances(id TEXT PRIMARY KEY,payload BLOB NOT NULL); CREATE TABLE IF NOT EXISTS app_views(instance TEXT PRIMARY KEY,payload BLOB NOT NULL); CREATE TABLE IF NOT EXISTS app_leases(instance TEXT PRIMARY KEY,id TEXT NOT NULL,payload BLOB NOT NULL); CREATE TABLE IF NOT EXISTS app_checkpoints(instance TEXT,id TEXT,payload BLOB NOT NULL,PRIMARY KEY(instance,id)); CREATE TABLE IF NOT EXISTS app_archives(id TEXT PRIMARY KEY,payload BLOB NOT NULL);")
     }
 
     public func apply(_ jobs: [AutomationDefinition]) throws {
         guard Set(jobs.map(\.id)).count == jobs.count else { throw PlatformError.invalid("Duplicate automation IDs") }
+        let reserved = Set(try appInstances().map(\.id)).union(try db.rows("SELECT id FROM app_archives").compactMap { $0[0].string })
+        guard jobs.allSatisfy({ !reserved.contains($0.id) }) else { throw PlatformError.denied("Automation ID belongs to a plugin app or retained app data") }
         try db.transaction {
             for var job in jobs {
                 if let previous = try self.jobs().first(where: { $0.id == job.id }) {
@@ -92,6 +95,23 @@ public actor SQLiteAutomationStore {
         }
     }
     public func fail(_ lease: String, outcome: String, summary: String? = nil) throws { try finish(running(lease), outcome: outcome, summary: summary) }
+    /// Pause the old scheduler once before the plugin-only UI takes ownership.
+    /// Keep the original encrypted definitions for an explicit future migration.
+    public func pauseLegacySchedulesForMigration() throws {
+        try db.transaction {
+            guard try db.rows("SELECT v FROM meta WHERE k='migration/plugin-apps-v2'").isEmpty else { return }
+            let previous = try jobs()
+            let backup = try seal(previous, namespace: "migration/plugin-apps-v2")
+            try db.execute("INSERT INTO meta(k,v) VALUES('migration/plugin-apps-v2-backup',?)", [.text(backup.base64EncodedString())])
+            for var job in previous where job.enabled {
+                job.enabled = false
+                job.revision += 1
+                try db.execute("UPDATE jobs SET payload=? WHERE id=?", [.blob(try seal(job, namespace: "job/\(job.id)")), .text(job.id)])
+                try db.execute("DELETE FROM meta WHERE k=?", [.text("due/\(job.id)")])
+            }
+            try db.execute("INSERT INTO meta(k,v) VALUES('migration/plugin-apps-v2','1')")
+        }
+    }
     public func recoverInterrupted() throws {
         let runs = try history().filter { $0.outcome == "running" }
         for run in runs { try finish(run, outcome: "interrupted", summary: "Runner stopped before committing; run manually to retry.") }
@@ -118,11 +138,11 @@ public actor SQLiteAutomationStore {
         let value = RunRecord(id: run.id, automationID: run.automationID, occurrence: run.occurrence, startedAt: run.startedAt, finishedAt: .now, outcome: outcome, summary: summary)
         try db.execute("UPDATE runs SET status=?,payload=? WHERE id=? AND status='running'", [.text(outcome), .blob(try seal(value, namespace: "run/\(run.id)")), .text(run.id)])
     }
-    private func seal<T: Encodable>(_ value: T, namespace: String) throws -> Data { try AES.GCM.seal(WireCoding.encoder().encode(value), using: key, authenticating: Data(namespace.utf8)).combined! }
-    private func open<T: Decodable>(_ data: Data, namespace: String) throws -> T { try WireCoding.decoder().decode(T.self, from: AES.GCM.open(AES.GCM.SealedBox(combined: data), using: key, authenticating: Data(namespace.utf8))) }
+    func seal<T: Encodable>(_ value: T, namespace: String) throws -> Data { try AES.GCM.seal(WireCoding.encoder().encode(value), using: key, authenticating: Data(namespace.utf8)).combined! }
+    func open<T: Decodable>(_ data: Data, namespace: String) throws -> T { try WireCoding.decoder().decode(T.self, from: AES.GCM.open(AES.GCM.SealedBox(combined: data), using: key, authenticating: Data(namespace.utf8))) }
 }
 
-private final class AutomationDatabase: @unchecked Sendable {
+final class AutomationDatabase: @unchecked Sendable {
     enum Value {
         case text(String), blob(Data), integer(Int64), real(Double), null
         var string: String? { if case let .text(v) = self { return v }; return nil }

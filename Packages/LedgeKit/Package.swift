@@ -21,6 +21,7 @@ let package = Package(
         .library(name: "GitHubIntegration", targets: ["GitHubIntegration"]),
         .library(name: "NotificationRouting", targets: ["NotificationRouting"]),
         .library(name: "AgentIPC", targets: ["AgentIPC"]),
+        .library(name: "PluginUI", targets: ["PluginUI"]),
         .library(name: "AutomationHost", targets: ["AutomationHost"]),
         .executable(name: "ledge", targets: ["LedgeCLI"]),
         .executable(name: "LedgeAgent", targets: ["LedgeAgent"])
@@ -41,10 +42,12 @@ let package = Package(
         .target(name: "NotificationRouting", dependencies: ["AutomationDomain"]),
         .testTarget(name: "NotificationRoutingTests", dependencies: ["NotificationRouting", "AutomationDomain"]),
         .target(name: "AgentIPC", dependencies: ["AutomationDomain"]),
-        .target(name: "AutomationHost", dependencies: ["AutomationDomain", "AutomationStorage", "AutomationRuntime", "PluginRuntime", "IntegrationKit", "GitHubIntegration"]),
+        .target(name: "PluginUI", dependencies: ["AutomationDomain", "AgentIPC", "ShellFeature", "NotificationRouting"]),
+        .testTarget(name: "PluginUITests", dependencies: ["PluginUI", "AutomationDomain", "AgentIPC"]),
+        .target(name: "AutomationHost", dependencies: ["AutomationDomain", "AutomationStorage", "AutomationRuntime", "PluginRuntime", "IntegrationKit"]),
         .testTarget(name: "AutomationHostTests", dependencies: ["AutomationHost", "AutomationDomain", "AutomationStorage", "PluginRuntime", "IntegrationKit"]),
         .executableTarget(name: "LedgeCLI", dependencies: ["AutomationHost", "AgentIPC"]),
-        .executableTarget(name: "LedgeAgent", dependencies: ["AutomationHost", "AgentIPC"]),
+        .executableTarget(name: "LedgeAgent", dependencies: ["AutomationHost", "AgentIPC", "GitHubIntegration"]),
         .target(
             name: "LedgeStorage",
             dependencies: ["LedgeDomain"],

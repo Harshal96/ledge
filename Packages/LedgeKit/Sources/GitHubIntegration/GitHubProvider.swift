@@ -18,12 +18,26 @@ public enum GitHubRequestPolicy {
             guard let number = parameters["number"].number, number.isFinite, number > 0, number <= 2_147_483_647, number.rounded() == number else { throw PlatformError.invalid("Expected a bounded issue number") }
             return "/repos/\(repository)/issues/\(Int(number))"
         case "github.pullRequests.findOverlap": return "/repos/\(repository)/pulls?state=open&per_page=100&page=\(page)"
+        case "github.actions.listRuns":
+            var components = URLComponents(); components.path = "/repos/\(repository)/actions/runs"
+            components.queryItems = [.init(name: "per_page", value: "100"), .init(name: "page", value: String(page))]
+            if let branch = parameters["branch"].string { components.queryItems?.append(.init(name: "branch", value: branch)) }
+            return components.string!
         default: throw PlatformError.denied("Unknown or non-read GitHub operation")
         }
     }
 }
 
-public actor GitHubProvider {
+public actor GitHubProvider: IntegrationProvider {
+    public nonisolated var identifier: String { "github" }
+    public nonisolated func requiredCapability(for operation: String) -> String? {
+        switch operation {
+        case "github.issues.listUpdated", "github.issues.getEvidence": "github.issues.read"
+        case "github.pullRequests.findOverlap": "github.pullRequests.read"
+        case "github.actions.listRuns": "github.actions.read"
+        default: nil
+        }
+    }
     private let credentials: CredentialStore
     private let session: URLSession
     private var tail: Task<Void, Never>?

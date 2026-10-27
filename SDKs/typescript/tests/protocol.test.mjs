@@ -7,6 +7,13 @@ import { fileURLToPath } from "node:url";
 
 const program = fileURLToPath(new URL("./echo_program.ts", import.meta.url));
 
+test("TypeScript SDK v2 retains action arguments", async () => {
+  const { Context, Channel } = await import("../src/index.ts");
+  const ctx = new Context({ hostProtocol: "2", runID: "r", automationID: "a", command: "run", mode: "preview", now: "2026-10-26T00:00:00Z", config: {}, arguments: { message: "hello" }, stateRevision: 7 }, new Channel());
+  assert.deepEqual(ctx.arguments, { message: "hello" });
+  assert.equal(ctx.stateRevision, 7);
+});
+
 test("TypeScript SDK exchanges protocol v1 host requests", async () => {
   const child = spawn(process.execPath, ["--experimental-strip-types", program], {
     stdio: ["pipe", "pipe", "pipe"],

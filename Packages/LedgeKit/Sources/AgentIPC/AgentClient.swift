@@ -24,7 +24,13 @@ public enum AgentSecurity {
     }
 }
 
-public final class AgentClient: @unchecked Sendable {
+public protocol AgentTransport: Sendable {
+    func call(_ method: String, _ params: JSONValue) async throws -> JSONValue
+}
+public extension AgentTransport {
+    func call(_ method: String) async throws -> JSONValue { try await call(method, .empty) }
+}
+public final class AgentClient: AgentTransport, @unchecked Sendable {
     public init() {}
     public func call(_ method: String, _ params: JSONValue = .empty) async throws -> JSONValue {
         let request = try WireCoding.encoder().encode(JSONValue.object(["method": .string(method), "params": params]))

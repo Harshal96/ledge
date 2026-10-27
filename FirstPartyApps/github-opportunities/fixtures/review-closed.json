@@ -1,0 +1,11 @@
+{
+  "config": {"repositories": ["owner/repo"], "labelsAny": ["good first issue"], "trustedTriageLabels": ["accepted"]},
+  "arguments": {"repository": "owner/repo", "number": 1},
+  "now": "2026-10-27T00:00:00Z",
+  "stateRevision": 7,
+  "responses": {
+    "github.issues.getEvidence:owner/repo": {"issue": {"number": 1, "state": "closed"}, "complete": true},
+    "github.pullRequests.findOverlap:owner/repo": {"data": [], "hasNext": false}
+  },
+  "expect": {"events": [], "summary": "fail"}
+}

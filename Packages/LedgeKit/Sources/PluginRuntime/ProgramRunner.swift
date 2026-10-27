@@ -99,7 +99,9 @@ public final class ProgramRunner: @unchecked Sendable {
                 } else {
                     guard frame["id"] == .string("run"), frame["error"] == .null, final == nil, frame["result"].object != nil else { throw PlatformError.invalid("Invalid or repeated final response") }
                     let result = frame["result"]
-                    try Validation.keys(result, allowed: ["events", "state", "recordMutations", "summary"])
+                    var allowed: Set<String> = ["events", "state", "recordMutations", "summary"]
+                    if request["hostProtocol"].string == "2" { allowed.insert("viewSnapshot") }
+                    try Validation.keys(result, allowed: allowed)
                     for event in result["events"].array ?? [] { _ = try HostEvent.validated(data: WireCoding.encoder().encode(event)) }
                     final = try WireCoding.decoder().decode(RunResult.self, from: WireCoding.encoder().encode(result))
                 }

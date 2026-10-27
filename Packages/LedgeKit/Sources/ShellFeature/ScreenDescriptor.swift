@@ -20,6 +20,13 @@ public struct ScreenDescriptor: Sendable, Equatable, Identifiable {
     }
 }
 
+public enum NotchDisplaySelection {
+    public static func select(_ screens: [ScreenDescriptor], preference: String?, pointer: CGPoint?) -> ScreenDescriptor? {
+        if preference == "pointer", let pointer, let pointed = screens.first(where: { $0.frame.contains(pointer) }) { return pointed }
+        return screens.first(where: { $0.id == preference }) ?? screens.first(where: { $0.safeAreaInsets.top > 0 }) ?? screens.first(where: \.isBuiltIn) ?? screens.first
+    }
+}
+
 public struct EdgeInsets: Sendable, Equatable {
     public let top: CGFloat
     public let left: CGFloat

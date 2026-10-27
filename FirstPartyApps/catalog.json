@@ -1,0 +1,5 @@
+[
+  {"id":"dev.ledge.github-opportunities","name":"GitHub Opportunities","summary":"Find contribution-ready issues in the repositories you choose. Quiet baselines and conservative evidence checks.","icon":"point.3.connected.trianglepath.dotted","folder":"github-opportunities","category":"Open source"},
+  {"id":"dev.ledge.github-ci","name":"GitHub CI Watch","summary":"Watch selected workflow runs. Bring completed builds and failures to the notch without another dashboard.","icon":"checkmark.circle","folder":"github-ci","category":"Build & ship"},
+  {"id":"dev.ledge.command-result","name":"Command Result","summary":"Run your own local program, manually or on a schedule. Keep its result in a native notch view.","icon":"terminal","folder":"command-result","category":"Your workflow"}
+]

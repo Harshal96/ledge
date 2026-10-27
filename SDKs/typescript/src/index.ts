@@ -12,6 +12,7 @@ export type RunResult = {
   state?: Json;
   recordMutations: RecordMutation[];
   summary?: string;
+  viewSnapshot?: Json;
 };
 
 export class ProtocolError extends Error {}
@@ -75,11 +76,13 @@ export class Context {
   readonly now: string;
   readonly config: Record<string, Json>;
   readonly initialState: Json;
+  readonly arguments: Record<string, Json>;
+  readonly stateRevision: number;
   private readonly channel: Channel;
   private nextID = 1;
 
   constructor(params: Frame, channel: Channel) {
-    if (params.hostProtocol !== "1") throw new ProtocolError("unsupported host protocol");
+    if (params.hostProtocol !== "1" && params.hostProtocol !== "2") throw new ProtocolError("unsupported host protocol");
     for (const key of ["runID", "automationID", "command", "mode", "now"]) {
       if (typeof params[key] !== "string") throw new ProtocolError(`missing ${key}`);
     }
@@ -93,6 +96,10 @@ export class Context {
     this.now = params.now as string;
     this.config = params.config as Record<string, Json>;
     this.initialState = (params.state ?? {}) as Json;
+    this.arguments = (params.arguments ?? {}) as Record<string, Json>;
+    const revision = params.stateRevision ?? 0;
+    if (typeof revision !== "number" || !Number.isSafeInteger(revision) || revision < 0) throw new ProtocolError("stateRevision must be a nonnegative integer");
+    this.stateRevision = revision;
     this.channel = channel;
   }
 

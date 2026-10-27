@@ -58,7 +58,7 @@ public final class CarbonHotKeyRegistrar: HotKeyRegistering {
     /// Injection point for app composition and tests. The same Carbon callback routes only the registered IDs to this sink.
     public func register(_ chords: [HotKeyChord], sink: some HotKeyEventSink) -> HotKeyRegistrationResult {
         unregisterAll()
-        guard chords.count == 2 else { return .unsupported }
+        guard !chords.isEmpty, chords.count <= 16 else { return .unsupported }
         router = HotKeyEventRouter(chords: chords)
         self.sink = sink
         guard installHandler() else { self.sink = nil; return .unsupported }

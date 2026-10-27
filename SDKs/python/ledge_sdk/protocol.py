@@ -71,6 +71,7 @@ class RunResult:
     state: Any = None
     record_mutations: list[dict[str, Any]] = field(default_factory=list)
     summary: str | None = None
+    view_snapshot: dict[str, Any] | None = None
 
     def to_wire(self) -> dict[str, Any]:
         result: dict[str, Any] = {
@@ -80,12 +81,14 @@ class RunResult:
             result["state"] = self.state
         if self.summary is not None:
             result["summary"] = self.summary
+        if self.view_snapshot is not None:
+            result["viewSnapshot"] = self.view_snapshot
         return result
 
 
 class Context:
     def __init__(self, params: dict[str, Any], channel: Channel):
-        if params.get("hostProtocol") != "1":
+        if params.get("hostProtocol") not in ("1", "2"):
             raise ProtocolError("unsupported host protocol")
         for name in ("runID", "automationID", "command", "mode", "now"):
             if not isinstance(params.get(name), str):
@@ -99,6 +102,11 @@ class Context:
         self.now: str = params["now"]
         self.config: dict[str, Any] = params["config"]
         self.initial_state: Any = params.get("state", {})
+        self.arguments: dict[str, Any] = params.get("arguments", {})
+        revision = params.get("stateRevision", 0)
+        if type(revision) is not int or revision < 0:
+            raise ProtocolError("stateRevision must be a nonnegative integer")
+        self.state_revision: int = revision
         self._channel = channel
         self._next_id = 1
 

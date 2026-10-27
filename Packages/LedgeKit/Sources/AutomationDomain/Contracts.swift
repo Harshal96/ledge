@@ -153,11 +153,13 @@ public struct RunResult: Codable, Sendable {
     public var state: JSONValue?
     public var recordMutations: [PluginRecord]
     public var summary: String?
-    public init(events: [HostEvent] = [], state: JSONValue? = nil, recordMutations: [PluginRecord] = [], summary: String? = nil) { self.events = events; self.state = state; self.recordMutations = recordMutations; self.summary = summary }
+    public var viewSnapshot: PluginViewSnapshot?
+    public init(events: [HostEvent] = [], state: JSONValue? = nil, recordMutations: [PluginRecord] = [], summary: String? = nil, viewSnapshot: PluginViewSnapshot? = nil) { self.events = events; self.state = state; self.recordMutations = recordMutations; self.summary = summary; self.viewSnapshot = viewSnapshot }
     public init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         events = try c.decodeIfPresent([HostEvent].self, forKey: .events) ?? []; state = try c.decodeIfPresent(JSONValue.self, forKey: .state)
         recordMutations = try c.decodeIfPresent([PluginRecord].self, forKey: .recordMutations) ?? []; summary = try c.decodeIfPresent(String.self, forKey: .summary)
+        viewSnapshot = try c.decodeIfPresent(PluginViewSnapshot.self, forKey: .viewSnapshot)
     }
 }
 

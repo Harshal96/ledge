@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 2,
+  "id": "dev.ledge.github-opportunities",
+  "version": "0.2.0",
+  "hostAPI": "2",
+  "name": "GitHub Opportunities",
+  "summary": "Conservative, configurable contribution scouting.",
+  "publisher": "Ledge",
+  "icon": "point.3.connected.trianglepath.dotted",
+  "runtime": {
+    "kind": "command",
+    "entry": "main.py",
+    "interpreter": "python3"
+  },
+  "capabilities": [
+    "github.issues.read",
+    "github.pullRequests.read",
+    "state.readwrite",
+    "events.publish",
+    "presentation.publish"
+  ],
+  "providerDependencies": [
+    "github"
+  ],
+  "commands": [
+    {
+      "id": "scan",
+      "title": "Scan repositories"
+    },
+    {
+      "id": "review",
+      "title": "Revalidate opportunity",
+      "argumentSchema": {
+        "type": "object",
+        "required": [
+          "repository",
+          "number"
+        ],
+        "properties": {
+          "repository": {
+            "type": "string"
+          },
+          "number": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  ],
+  "defaultCommand": "scan",
+  "configSchema": "config.schema.json",
+  "defaultConfig": {
+    "repositories": [],
+    "labelsAny": [
+      "good first issue",
+      "help wanted"
+    ],
+    "trustedTriageLabels": [],
+    "keywords": [],
+    "minimumScore": 70,
+    "firstRun": "baseline"
+  }
+}

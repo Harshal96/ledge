@@ -1,0 +1,12 @@
+{
+  "config": {"repositories": ["owner/repo"], "branch": "main"},
+  "now": "2026-10-27T00:00:00Z",
+  "stateRevision": 7,
+  "responses": {
+    "github.actions.listRuns:owner/repo": {
+      "data": {"workflow_runs": [{"id": 123, "name": "Build", "status": "completed", "conclusion": "success", "html_url": "https://github.com/owner/repo/actions/runs/123"}]},
+      "hasNext": false
+    }
+  },
+  "expect": {"events": [], "state": {"owner/repo": {"123:1": "completed"}}}
+}

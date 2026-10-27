@@ -4,7 +4,6 @@ import AutomationStorage
 import AutomationRuntime
 import PluginRuntime
 import IntegrationKit
-import GitHubIntegration
 
 /// The agent alone owns this composition root. GUI and CLI use the same XPC
 /// commands; plugins get only the scoped per-run channel below.
@@ -12,7 +11,8 @@ public actor AutomationHost {
     public let store: SQLiteAutomationStore
     public let registry: PluginRegistry
     private let credentials: CredentialStore
-    private let github: GitHubProvider
+    private let github: any IntegrationProvider
+    private let apps: PluginHost
     private let runner = ProgramRunner()
     private var scheduledTask: Task<Void, Never>?
     private var running = Set<String>()
@@ -44,21 +44,31 @@ public actor AutomationHost {
     }
     private func expireWatcher(_ id: UUID) { watchers.removeValue(forKey: id)?.resume() }
 
-    public static func open(root: URL? = nil) async throws -> AutomationHost {
+    public static func open(root: URL? = nil, integrationFactory: @Sendable (CredentialStore) -> any IntegrationProvider = { _ in UnavailableIntegrationProvider() }) async throws -> AutomationHost {
         let path = root ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Ledge/Automation", isDirectory: true)
         let credentials = CredentialStore()
         let exists = FileManager.default.fileExists(atPath: path.appendingPathComponent("automation.sqlite").path)
         let key = try await credentials.masterKey(allowCreation: !exists)
         let store = try SQLiteAutomationStore(root: path, key: key)
         let registry = try PluginRegistry(root: path.appendingPathComponent("Plugins", isDirectory: true))
-        let host = AutomationHost(store: store, registry: registry, credentials: credentials)
+        let host = AutomationHost(store: store, registry: registry, credentials: credentials, integration: integrationFactory(credentials))
+        try await store.pauseLegacySchedulesForMigration()
         try await store.recoverInterrupted()
+        try await store.recoverAppLeases()
         await host.startScheduler()
+        await host.apps.startScheduler()
         return host
     }
-    public init(store: SQLiteAutomationStore, registry: PluginRegistry, credentials: CredentialStore) { self.store = store; self.registry = registry; self.credentials = credentials; github = GitHubProvider(credentials: credentials) }
+    public init(store: SQLiteAutomationStore, registry: PluginRegistry, credentials: CredentialStore, integration: any IntegrationProvider = UnavailableIntegrationProvider()) {
+        self.store = store; self.registry = registry; self.credentials = credentials; github = integration
+        apps = PluginHost(store: store, registry: registry) { instance, installation, operation, parameters in
+            guard let capability = integration.requiredCapability(for: operation), installation.grants.contains(capability), let account = instance.connection else { throw PlatformError.denied("Connection or capability not granted") }
+            return try await integration.call(operation: operation, parameters: parameters, account: account, repositories: instance.config["repositories"].array?.compactMap(\.string) ?? [])
+        }
+    }
 
     public func handle(_ method: String, params: JSONValue) async throws -> JSONValue {
+        if method.hasPrefix("apps.") { return try await apps.handle(method, params: params) }
         switch method {
         case "status", "snapshot": return try await snapshot()
         case "watch":
@@ -102,8 +112,8 @@ public actor AutomationHost {
             guard invocationTasks.count < 2, !running.contains(job.id) else { throw PlatformError.unavailable("Runner busy; retry after the current invocation completes") }
             enqueue(job, occurrence: "manual/\(requestID)", dryRun: params["dryRun"].bool == true)
             return .object(["accepted": .bool(true), "requestID": .string(requestID)])
-        case "stop": cancelInvocations(); scheduledTask?.cancel(); try await store.setStopped(true); changed(); return .bool(true)
-        case "resume": try await store.setStopped(false); failures.removeAll(); startScheduler(); changed(); return .bool(true)
+        case "stop": cancelInvocations(); scheduledTask?.cancel(); await apps.stop(); try await store.setStopped(true); changed(); return .bool(true)
+        case "resume": try await store.setStopped(false); failures.removeAll(); startScheduler(); await apps.startScheduler(); changed(); return .bool(true)
         case "ack": if let id = params["id"].string { try await store.acknowledge(id) }; changed(); return .bool(true)
         case "delivered": if let id = params["id"].string { try await store.delivered(id) }; return .bool(true)
         case "connect.github":
@@ -181,9 +191,9 @@ public actor AutomationHost {
 }
 
 private actor RunContext {
-    let job: AutomationDefinition; let plugin: PluginManifest; let store: SQLiteAutomationStore; let github: GitHubProvider
+    let job: AutomationDefinition; let plugin: PluginManifest; let store: SQLiteAutomationStore; let github: any IntegrationProvider
     private var requests = 0
-    init(job: AutomationDefinition, plugin: PluginManifest, store: SQLiteAutomationStore, github: GitHubProvider) { self.job = job; self.plugin = plugin; self.store = store; self.github = github }
+    init(job: AutomationDefinition, plugin: PluginManifest, store: SQLiteAutomationStore, github: any IntegrationProvider) { self.job = job; self.plugin = plugin; self.store = store; self.github = github }
     func call(_ method: String, params: JSONValue) async throws -> JSONValue {
         switch method {
         case "host.state.get": guard plugin.capabilities.contains("state.readwrite") else { throw PlatformError.denied("State access not granted") }; return try await store.state(jobID: job.id)
@@ -193,8 +203,7 @@ private actor RunContext {
         case "host.integration.call":
             requests += 1; guard requests <= 120 else { throw PlatformError.unavailable("Per-run integration budget exhausted; resume next scan") }
             let operation = params["operation"].string ?? ""
-            let capability = operation.hasPrefix("github.pullRequests.") ? "github.pullRequests.read" : "github.issues.read"
-            guard plugin.capabilities.contains(capability), let connection = job.connection else { throw PlatformError.denied("GitHub connection/capability not granted") }
+            guard let capability = github.requiredCapability(for: operation), plugin.capabilities.contains(capability), let connection = job.connection else { throw PlatformError.denied("Connection/capability not granted") }
             let repositories = job.config["repositories"].array?.compactMap(\.string) ?? []
             return try await github.call(operation: operation, parameters: params["params"], account: connection, repositories: repositories)
         case "host.log": return .bool(true) // arbitrary text is not persisted as potentially sensitive telemetry

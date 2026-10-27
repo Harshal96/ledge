@@ -11,6 +11,15 @@ PROGRAM = Path(__file__).with_name("echo_program.py")
 
 
 class ProtocolTests(unittest.TestCase):
+    def test_v2_context_and_persistent_view_snapshot(self):
+        sys.path.insert(0, str(SDK))
+        from ledge_sdk.protocol import Context, Channel, RunResult
+        context = Context({"hostProtocol": "2", "runID": "r", "automationID": "instance", "command": "run", "mode": "preview", "now": "2026-10-26T00:00:00Z", "config": {}, "arguments": {"message": "hello"}, "stateRevision": 7}, Channel())
+        self.assertEqual(context.arguments, {"message": "hello"})
+        self.assertEqual(context.state_revision, 7)
+        snapshot = {"presentation": {"instanceID": "instance"}, "checkedAt": context.now}
+        self.assertEqual(RunResult(view_snapshot=snapshot).to_wire()["viewSnapshot"], snapshot)
+
     def launch(self):
         environment = dict(os.environ, PYTHONPATH=str(SDK))
         child = subprocess.Popen(

@@ -2,6 +2,7 @@ import Foundation
 import AutomationDomain
 import AutomationHost
 import AgentIPC
+import GitHubIntegration
 
 final class AgentService: NSObject, LedgeAgentProtocol, NSXPCListenerDelegate, @unchecked Sendable {
     private let host: AutomationHost
@@ -33,7 +34,7 @@ let startup = DispatchSemaphore(value: 0)
 nonisolated(unsafe) var service: AgentService?
 nonisolated(unsafe) var startupError: String?
 Task.detached {
-    do { service = AgentService(host: try await AutomationHost.open()) }
+    do { service = AgentService(host: try await AutomationHost.open(integrationFactory: { GitHubProvider(credentials: $0) })) }
     catch { startupError = error.localizedDescription }
     startup.signal()
 }
